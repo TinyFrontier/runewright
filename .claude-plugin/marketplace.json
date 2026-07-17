@@ -1,0 +1,12 @@
+{
+  "name": "runewright",
+  "owner": { "name": "TinyFrontier" },
+  "description": "Runewright — фабрика скиллов и сабагентов для Claude Code и Codex",
+  "plugins": [
+    {
+      "name": "runewright",
+      "source": "./",
+      "description": "Фабрика скиллов: skill-brief (интервью), skill-generator, subagent-generator, skill-audit и канон runewright-blueprint"
+    }
+  ]
+}
