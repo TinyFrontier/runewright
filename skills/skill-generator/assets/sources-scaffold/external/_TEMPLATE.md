@@ -1,7 +1,7 @@
-# EXT-XXX: <что это>
+# EXT-XXX: <source name>
 
-- URL / путь: <ссылка или путь вне репо>
-- Что там искать: <какие вопросы закрывает этот источник>
-- Как читать: <fetch / открыть файл / экспорт / запрос к API>
-- Проверено: <дата последней сверки, что источник жив и актуален>
-- Владелец: <кто отвечает за актуальность | «—»>
+- URL or path: <link or path outside the repository>
+- Questions answered: <what this source establishes>
+- How to read: <fetch, open file, export, or API request>
+- Verified: <last date the source was confirmed available and current>
+- Owner: <person responsible for freshness | none>

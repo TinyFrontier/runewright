@@ -1,98 +1,107 @@
 ---
 name: runewright-blueprint
 description: >-
-  Справочный канон фабрики runewright: схема идеального скилла (7 элементов),
-  анти-паттерны и контракт «живого» скилла. Читается скиллами skill-generator,
-  subagent-generator и skill-audit. Пользователем напрямую не вызывается — для
-  создания скилла используй skill-brief или skill-generator.
+  Reference standard for Runewright: seven required skill elements,
+  anti-patterns, language policy, and the live-skill feedback contract. Read by
+  skill-generator, subagent-generator, and skill-audit. Use directly only to
+  inspect the standard. Do not use to create a skill; use skill-brief or
+  skill-generator instead.
 ---
 
-# Runewright Blueprint — канон фабрики
+# Runewright Blueprint
 
-Главный принцип: скилл — не учебник, а маршрутная карта. Знания живут в источниках
-истины (`.runewright/sources/` проекта), скилл говорит, куда смотреть и в каком
-порядке действовать. Тогда любая модель — сильная или слабая — идёт одним маршрутом.
+A skill is a route, not a textbook. Knowledge lives in project truth sources
+under `.runewright/sources/`; a skill says where to look and in what order to
+act. This gives strong and small models the same reproducible route.
 
-Лимиты: `description` ≤ 500 символов; тело скилла ≤ 150 строк; тело агента ≤ 100 строк.
+Limits: `description` <= 500 characters; skill body <= 150 lines; agent body
+<= 100 lines.
 
-## 7 обязательных элементов скилла
+## Language contract
 
-1. **Описание с триггерами и анти-триггерами.** Description — единственное, что агент
-   видит до вызова; по нему решает, звать скилл или нет. Формула: «Что делает.
-   Использовать когда: <2–4 формулировки, как их произнесёт пользователь>.
-   НЕ использовать когда: <смежные случаи → куда вместо>». Без анти-триггеров слабая
-   модель зовёт скилл на всё похожее.
-   - [ ] description содержит «когда применять» И «когда НЕ применять», ≤ 500 символов
+- Repository instructions, templates, comments, and stable control tokens are English.
+- Converse in the language of the user's current request.
+- Generated artifact language: explicit requested language first; otherwise the
+  language of the user's current request.
+- Localize human-facing prose and headings while preserving their semantic roles.
+- Keep code, identifiers, paths, source IDs, YAML/TOML keys, `DONE`, `PARTIAL`,
+  `BLOCKED`, and feedback enum values unchanged.
 
-2. **Источники истины.** Указатели (ID из `.runewright/sources/INDEX.md`, пути,
-   команды) — НЕ копия документации. Каждое утверждение в результате выводимо из
-   источника: агент цитирует прочитанное, а не «помнит». Это убирает галлюцинации.
-   - [ ] секция «Источники истины» + правило «не нашёл в источнике — спроси, не выдумывай»
+## Seven required skill elements
 
-3. **Пошаговый сценарий.** 3–9 нумерованных шагов в строгом порядке, каждый — одно
-   действие с проверяемым результатом; ветвления явные («если X → шаг N»). Нужно
-   больше 9 шагов — скилл делает слишком много.
-   - [ ] 3–9 шагов, у каждого проверяемый результат, ветвления явные
+1. **Description with triggers and anti-triggers.** The description is all an
+   agent sees before invocation. Formula: what it does; use when phrased as the
+   user would ask; do not use for adjacent cases and name the alternative.
+   - [ ] Includes use cases and exclusions; <= 500 characters.
 
-4. **Краткие термины.** Мини-словарь: «термин — определение в одну строку», ≤ 7 штук.
-   Дальше по тексту — только термин, без повторных объяснений.
-   - [ ] словарь ≤ 7 терминов; в теле термины не переобъясняются
+2. **Truth sources.** Point to source IDs, paths, or retrieval commands; never
+   copy documentation. Every factual claim must be traceable to a source.
+   - [ ] Has a truth-sources section and says: ask when missing; never invent.
 
-5. **Критерии результата.** Проверяемые условия «сдано» + один конкретный пример
-   хорошего результата и один — плохого. Плохой важнее: он показывает слабой модели
-   типичную ошибку.
-   - [ ] чеклист «сдано» + пример «хорошо» и пример «плохо»
+3. **Ordered workflow.** Use 3-9 numbered steps in strict order. Each step is one
+   action with a verifiable result; branches are explicit.
+   - [ ] Has 3-9 verifiable steps and explicit branches.
 
-6. **Эталонные примеры (gold-standard).** Ссылка (не копия) на 1–2 реальных лучших
-   результата + строка «что сработало и почему» с метрикой. Нет эталона — явная
-   строка «эталона пока нет; первый принятый без правок результат станет эталоном».
-   - [ ] ссылка на эталон с метрикой, либо явное «эталона пока нет»
+4. **Concise terms.** Define at most seven terms in one line each, then use those
+   terms without repeating the explanation.
+   - [ ] Glossary has at most seven entries, or is omitted when unnecessary.
 
-7. **Петля обратной связи.** Первый шаг сценария читает feedback-лог, последний —
-   пишет в него. Контракт — ниже.
-   - [ ] первый шаг читает лог, последний пишет
+5. **Result criteria.** Provide a verifiable done checklist, one concrete good
+   example, and one concrete bad example that exposes the likely failure mode.
+   - [ ] Has a done checklist plus good and bad examples.
 
-## Анти-паттерны
+6. **Gold-standard examples.** Link to one or two accepted outputs and state why
+   they worked, with a metric. If none exists, say the first output accepted
+   unchanged becomes the gold standard.
+   - [ ] Links a measured example or explicitly states that none exists yet.
 
-| Анти-паттерн | Правило |
+7. **Feedback loop.** The workflow reads recent feedback first and appends an
+   execution record last. Use the contract below.
+   - [ ] First step reads feedback; last step appends to it.
+
+## Anti-patterns
+
+| Anti-pattern | Rule |
 |---|---|
-| Пустая команда-обёртка «вызови X» | Обёртка либо добавляет парсинг/контекст, либо не существует |
-| Дубликат (одна функция = команда + скилл + агент) | Одна функция — одна точка входа; остальное — ссылки |
-| Саб-скилл с единственным родителем | Саб-скилл оправдан только при ≥ 2 разных родителях |
-| Раздутость (> 150 строк, копия документации) | Знания → в sources, скилл — маршрут. Каждый абзац отвечает: «что агент сделает иначе без него?» |
-| Избыток скиллов (описания съедают контекст) | Новый скилл — только под задачу, повторившуюся ≥ 3 раз |
-| Перетренировка («всегда», «обязательно» в каждом абзаце) | Вместо тона — источник истины + проверяемый критерий |
-| Копия внешней документации | Указатель + дата проверки; актуальность проверяет skill-audit |
+| Empty wrapper that only says "invoke X" | A wrapper adds parsing or context, or does not exist. |
+| Same function as command, skill, and agent | One function has one entry point; other components link to it. |
+| Sub-skill with one parent | Extract a sub-skill only when at least two parents reuse it. |
+| More than 150 lines or copied documentation | Move knowledge to sources; keep only the route. |
+| Too many skills | Add one only for a task that has repeated at least three times. |
+| Repeated "always" and "must" | Replace forceful tone with a source or verifiable criterion. |
+| Copied external documentation | Store a pointer and verification date; let skill-audit check freshness. |
 
-## Контракт «живого» скилла
+## Live-skill feedback contract
 
-Лог: `.runewright/feedback/<skill-name>.md` (агенты — `agent-<name>.md`), append-only,
-создаётся при первом запуске. Формат записи:
+Log: `.runewright/feedback/<skill-name>.md`; agents use
+`agent-<name>.md`. The log is append-only and is created on first use.
 
 ```markdown
-## <YYYY-MM-DD> <задача в 3–5 словах>
-- Результат: принят без правок | принят с правками | переделан | отклонён
-- Правки пользователя: <что именно | «нет»>
-- Урок: <одно правило, меняющее следующий запуск | «нет»>
-- Эталон-кандидат: <путь, если принят без правок | «нет»>
+## <YYYY-MM-DD> <task in 3-5 words>
+- Outcome: accepted unchanged | accepted with edits | reworked | rejected
+- User edits: <specific changes | none>
+- Lesson: <one rule that changes the next run | none>
+- Gold candidate: <path when accepted unchanged | none>
 ```
 
-Правила:
-- Одна запись = один запуск; пишет исполнитель. Записи не редактируются задним
-  числом; неверный урок отменяется записью «Отмена урока от <дата>: <почему>».
-- Чтение: первый шаг каждого скилла читает **последние 5 записей** (не весь файл).
-  Конфликт урока со сценарием — сценарий главнее, конфликт фиксируется новой записью.
-- Сигналы качества: доля «принят без правок» растёт → уроки работают; одна правка
-  повторилась ≥ 2 раз → пора вшивать в скилл (консолидация); ≥ 2 «переделан» подряд
-  → скилл сломан, пересборка через skill-generator.
+Rules:
 
-Консолидация (триггер: 10+ записей с последней консолидации, повторяющаяся правка
-или плановый аудит):
-1. Прочитай лог целиком, сгруппируй уроки: повторяющиеся / разовые / отменённые.
-2. Повторяющиеся внеси в скилл по адресу: ошибка выбора скилла → анти-триггеры;
-   ошибка порядка → сценарий; ошибка качества → критерии + пример «плохо»;
-   фактическая ошибка → обнови ИСТОЧНИК, не скилл.
-3. Лучший «принят без правок» → в `examples/` скилла, обнови секцию «Эталон».
-4. Прогони скилл по чеклистам 7 элементов и лимитам: добавил урок — проверь,
-   что можно сократить.
-5. В лог: `## <дата> КОНСОЛИДАЦИЯ — уроки X, Y перенесены; лог до этой даты не читать.`
+- One record represents one run and is written by the executor. Never edit past
+  records; revoke a bad lesson with `Lesson revoked from <date>: <reason>`.
+- Read the last five records at startup, not the whole file. The workflow wins over
+  a conflicting lesson; record the conflict in a new entry.
+- Quality signals: a rising `accepted unchanged` share means lessons work; the
+  same edit twice means consolidate it; two consecutive `reworked` outcomes mean
+  the skill is broken and should be rebuilt through skill-generator.
+
+Consolidate after ten records since the last consolidation, a repeated edit, or a
+scheduled audit:
+
+1. Read the full log and group lessons as repeated, one-off, or revoked.
+2. Put repeated lessons in the right place: selection error -> anti-trigger;
+   order error -> workflow; quality error -> criteria and bad example; factual
+   error -> truth source, not the skill.
+3. Move the best accepted-unchanged output to `examples/` and update the gold link.
+4. Recheck all seven elements and limits; when adding a lesson, remove any text
+   that is no longer needed.
+5. Append: `## <date> CONSOLIDATION - lessons X and Y moved; ignore earlier log`.

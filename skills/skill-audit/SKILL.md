@@ -1,90 +1,106 @@
 ---
 name: skill-audit
 description: >-
-  Аудит всех скиллов, агентов и команд окружения (Claude Code и/или Codex):
-  дубликаты, раздутость, мёртвые скиллы, соответствие 7 элементам канона runewright;
-  выдаёт план правок, ничего не удаляя. Использовать когда: «проведи аудит скиллов»,
-  «наведи порядок в скиллах», после установки новых плагинов/скиллов. НЕ использовать
-  для правки одного конкретного скилла — это skill-generator.
+  Audits all skills, agents, and commands in a Claude Code and/or Codex
+  environment for duplication, bloat, inactivity, and compliance with the seven
+  Runewright elements; writes a remediation plan without deleting anything. Use
+  for "audit my skills" or after installing plugins. Do not use to edit one
+  specific skill; use skill-generator instead.
 ---
 
 # skill-audit
 
-Автономный повторяемый аудит. Ничего не удаляет и не правит — только факты и план.
-Правки — отдельным ходом после подтверждения пользователя. Канон и чеклисты 7
-элементов — `../runewright-blueprint/SKILL.md` (прочитай перед работой).
+Run a repeatable autonomous audit. Do not delete or edit components; report facts
+and a plan only. Apply changes in a separate turn after user confirmation. Read
+`../runewright-blueprint/SKILL.md` before starting and follow its language contract.
 
-Сначала прочитай последние 5 записей `.runewright/feedback/skill-audit.md`
-(нет файла — пропусти).
+Read the last five records in `.runewright/feedback/skill-audit.md`; skip when the
+file does not exist.
 
-## Шаг 1 — Инвентаризация
-Собери полный список единиц (путь, размер в байтах и строках, тип) по платформам,
-которые есть в окружении:
-- Claude Code: `.claude/skills/*/SKILL.md`, `.claude/agents/*.md`, `.claude/commands/*.md`;
-  глобальные `~/.claude/skills|agents`; плагины — пути из
-  `~/.claude/plugins/installed_plugins.json` → `<installPath>/skills|agents|commands`
-  (только последняя установленная версия каждого плагина).
-- Codex: `.agents/skills/*/SKILL.md` (проект и родительские папки), `~/.agents/skills/`.
-Шаблоны/каркасы внутри плагинов (template/, scaffold/) в аудит не включай.
+## Step 1 - Inventory
 
-## Шаг 2 — Использование
-- feedback-логи `.runewright/feedback/*.md` — у живого скилла лог непустой;
-  пустой лог у скилла старше месяца — признак неиспользования;
-- история платформы, если доступна (например `~/.claude/history.jsonl` — упоминания команд).
-Помечай честно: «не использовался» vs «нет данных об использовании» — разные вердикты.
+Collect path, byte size, line count, and type for every component on platforms
+present in the environment:
 
-## Шаг 3 — Проверка по канону
-Каждому скиллу/агенту проставь по 7 элементам blueprint оценку OK / СЛАБО / НЕТ.
-Дополнительно: description ≤ 500 символов с триггерами И анти-триггерами; тело
-скилла ≤ 150 строк, агента ≤ 100; YAML валиден, `name` = имя папки/файла; нет
-скопированной документации; нет мусора (битые ссылки — проверь, что файлы существуют).
+- Claude Code: `.claude/skills/*/SKILL.md`, `.claude/agents/*.md`, and
+  `.claude/commands/*.md`; user-level `~/.claude/skills|agents`; plugin paths from
+  `~/.claude/plugins/installed_plugins.json` into `<installPath>/skills|agents|commands`,
+  using only the latest installed version of each plugin.
+- Codex: project and parent `.agents/skills/*/SKILL.md`, plus
+  `~/.agents/skills/*/SKILL.md`.
 
-## Шаг 4 — Дубликаты и структура
-- Сгруппируй единицы с пересекающейся функцией (команда + скилл + агент на одно;
-  два скилла с одинаковыми триггерами; один скилл в Claude и Codex под разными
-  именами). Для каждой группы — одна каноническая точка входа, остальное к
-  удалению/ссылке.
-- Саб-скиллы с единственным родителем — кандидаты на слияние.
-- Устаревшие версии в кэшах плагинов.
-- Посчитай суммарный объём description (~байты/4 = токены постоянной нагрузки);
-  укажи, сколько вернёт удаление дублей и мёртвых.
+Exclude templates and scaffolds nested inside plugins.
 
-## Шаг 5 — Чего не хватает
-- Скиллы без источников истины: перечисли утверждения, которые агент «помнит».
-- Домены с регулярными задачами без скилла (спроси у пользователя список доменов,
-  если он не очевиден из проекта).
-- Незакрытые петли: пишут фидбэк, но не читают, и наоборот; логи, требующие
-  консолидации (10+ записей, повторяющиеся правки).
+## Step 2 - Usage
 
-## Шаг 6 — Отчёт
-Запиши `.runewright/audits/audit-<YYYY-MM-DD>.md` (создай папку, если нет):
+- Inspect `.runewright/feedback/*.md`: a live skill has a non-empty log; an empty
+  log for a skill older than one month suggests non-use.
+- Inspect available platform history, such as command mentions in
+  `~/.claude/history.jsonl`.
+
+Keep `not used` distinct from `no usage data`.
+
+## Step 3 - Blueprint compliance
+
+Rate every skill or agent on the seven blueprint elements with stable values
+`OK`, `WEAK`, or `MISSING`. Also check: description <= 500 characters with
+triggers and anti-triggers; skill body <= 150 lines; agent body <= 100 lines;
+valid YAML; name matches its folder or filename; no copied documentation; no
+broken file references.
+
+## Step 4 - Duplication and structure
+
+- Group overlapping components: a command, skill, and agent for one function;
+  skills with the same triggers; or the same skill under different Claude and
+  Codex names. Recommend one canonical entry point and links or removal for the rest.
+- Mark sub-skills with only one parent as merge candidates.
+- Identify stale plugin-cache versions.
+- Estimate total description load as bytes divided by four and the savings from
+  removing duplicates or inactive components.
+
+## Step 5 - Missing pieces
+
+- For skills without truth sources, list claims the agent is expected to remember.
+- Find recurring domains with no skill; ask the user for domains only when the
+  project does not make them evident.
+- Find feedback loops that only read or only write and logs needing consolidation:
+  ten or more records or repeated edits.
+
+## Step 6 - Report
+
+Write `.runewright/audits/audit-<YYYY-MM-DD>.md`, creating the directory if needed.
+Write prose and localize human-facing headings in the target artifact language
+from the blueprint. Preserve the following semantic structure:
 
 ```markdown
-# Аудит скиллов — <дата>
-## Сводка
-Всего: N скиллов, M агентов, K команд. Объём descriptions: ~X токенов.
-## УДАЛИТЬ (требует подтверждения)
-| Единица | Причина (факт) | Экономия |
-## ОБЪЕДИНИТЬ
-| Группа | Каноническая точка входа | Что делать с остальными |
-## ДОРАБОТАТЬ
-| Единица | Отсутствующие элементы (из 7) | Конкретная правка |
-## СОЗДАТЬ
-| Домен/задача | Обоснование (повторяемость) |
-## План применения
-Нумерованный список: удаления/слияния (после подтверждения) → доработки
-(через skill-generator) → новые скиллы (через skill-brief).
+# Skill audit - <date>
+## Summary
+Total: N skills, M agents, K commands. Description load: about X tokens.
+## REMOVE (requires confirmation)
+| Component | Evidence-based reason | Savings |
+## MERGE
+| Group | Canonical entry point | Action for the rest |
+## IMPROVE
+| Component | Missing blueprint elements | Concrete change |
+## CREATE
+| Domain or task | Recurrence evidence |
+## Application plan
+Numbered order: removals and merges after confirmation; improvements through
+skill-generator; new skills through skill-brief.
 ```
 
-Покажи пользователю сводку и план. Допиши запись в свой feedback-лог.
+Show the summary and plan to the user. Append a record to this skill's feedback log.
 
-## Критерии результата
-Сдано: отчёт записан; каждый вердикт подкреплён фактом (путь, размер, дата);
-ничего не удалено и не изменено, кроме отчёта и feedback-лога.
-Хорошо: «graphify: 56.8KB, ~1150 строк кода внутри SKILL.md → код в scripts/,
-description с анти-триггерами» — факт, диагноз, правка.
-Плохо: «скилл X кажется лишним» — без размера, без данных использования, без правки.
+## Result criteria
 
-## Эталон
-Эталона пока нет; первый отчёт, чей план принят пользователем без правок,
-сохранить ссылкой здесь.
+Done when the report exists, every verdict cites evidence such as a path, size,
+or date, and only the report and feedback log changed.
+
+Good: `graphify: 56.8 KB and about 1,150 lines of code in SKILL.md; move code to
+scripts/ and add anti-triggers to the description` - fact, diagnosis, and action.
+
+Bad: `skill X seems unnecessary` - no size, usage evidence, or concrete action.
+
+## Gold standard
+
+No gold standard yet. Link the first report whose plan the user accepts unchanged.

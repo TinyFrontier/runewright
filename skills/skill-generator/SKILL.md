@@ -1,107 +1,111 @@
 ---
 name: skill-generator
 description: >-
-  Создаёт новый скилл (SKILL.md, стандарт Agent Skills — Claude Code и Codex) по
-  эталонной схеме фабрики runewright. Использовать когда: «создай скилл», «нужен
-  скилл для X», «оформи задачу как скилл», готов бриф из skill-brief. НЕ использовать
-  когда: требования ещё в голове и задача нетривиальная — сначала skill-brief; нужен
-  сабагент с изоляцией/инструментами — subagent-generator; задача разовая — скилл
-  не нужен, просто выполни её.
+  Creates a production-ready Agent Skill from a request or brief using the seven
+  Runewright elements, truth-source pointers, validation, and a feedback loop. If
+  no ready brief exists, it runs skill-brief automatically. Use for "create a
+  skill" or "turn this workflow into a skill." Do not use for a role needing
+  isolated context or permissions; use subagent-generator instead.
 ---
 
 # skill-generator
 
-Выход: папка `<skills-dir>/<name>/` с валидным SKILL.md по канону
-`../runewright-blueprint/SKILL.md` (прочитай его перед работой). Иди строго по шагам.
+Produce a complete skill directory, not advice about how to create one. Read
+`../runewright-blueprint/SKILL.md` before work and follow its language contract.
+Execute the steps in order.
 
-**Термины**
-- **skills-dir** — куда класть скилл: в Claude Code проект — `.claude/skills/`,
-  в Codex проект — `.agents/skills/`; глобально — `~/.claude/skills/` / `~/.agents/skills/`.
-  Определи по окружению; неясно — спроси пользователя.
-- **state** — служебная папка проекта `.runewright/` (sources/, feedback/, briefs/).
+## Steps
 
-## Шаги
+1. **Read lessons.** Read the last five records in
+   `.runewright/feedback/skill-generator.md`; skip when the file does not exist.
 
-1. **Прочитай уроки:** последние 5 записей `.runewright/feedback/skill-generator.md`
-   (нет файла — пропусти). Затем проверь, нужен ли скилл: прочитай description
-   существующих скиллов в skills-dir. Задача уже покрыта — предложи доработать
-   существующий и остановись. Задача разовая — скажи это и остановись.
+2. **Resolve the brief automatically.** Look for a matching ready brief in
+   `.runewright/briefs/<name>.md`. When found, reuse all of it and ask only about
+   the section whose semantic role is undefined gaps, regardless of its localized
+   heading. When no ready brief exists and the user did not explicitly request
+   no brief, read and execute `../skill-brief/SKILL.md` in the current conversation
+   with the original request. Do not ask permission to start the interview. After
+   the brief is written, return here and continue without another invocation.
+   If the user explicitly skips the brief, ask once for all missing data:
+   - 2-4 verbatim triggers and 1-2 adjacent requests that must not invoke the skill;
+   - truth-source files, docs, databases, commands, or URLs;
+   - verifiable done criteria and the likely failure;
+   - the best existing output, if any.
 
-2. **Собери входные данные.** Сначала проверь бриф `.runewright/briefs/<name>.md`:
-   есть — возьми всё из него, переспроси только секцию «Не определено» и переходи
-   к шагу 3. Брифа нет, а задача нетривиальная (сценарий/источники не очевидны) —
-   предложи сначала пройти skill-brief. Иначе спроси одним сообщением:
-   - 2–4 формулировки запуска задачи (→ триггеры) и 1–2 смежных случая «не звать» (→ анти-триггеры);
-   - где лежит правда: файлы, доки, БД, URL (→ источники истины);
-   - как выглядит готовый результат и типичная ошибка (→ критерии);
-   - есть ли лучший образец результата (→ эталон).
+3. **Initialize project state when needed.** If `.runewright/sources/` is absent,
+   copy `assets/sources-scaffold/` from this skill into it. Register each named
+   source in `sources/INDEX.md`; create an external source card for each URL. In
+   the generated skill, cite stable source IDs and never copy source contents.
 
-3. **Инициализируй state, если нужно.** Нет `.runewright/sources/` — скопируй
-   каркас из `assets/sources-scaffold/` (папка этого скилла) в `.runewright/sources/`.
-   Затем зарегистрируй каждый названный источник: нет в `sources/INDEX.md` — добавь
-   строку по формату индекса (внешний URL — карточка в `sources/external/`).
-   В скилле ссылайся на ID; содержимое источников в скилл НЕ копируй.
+4. **Fill the template.** Use a kebab-case folder name matching frontmatter
+   `name`; keep description <= 500 characters, body <= 150 lines, and workflow to
+   3-9 verifiable steps with explicit branches. Avoid forceful filler such as
+   repeated "always"; use a source or criterion instead. Write user-facing prose
+   and headings in the brief's explicit artifact language, or otherwise in the
+   language of the user's current request. Preserve code, paths, IDs, and keys.
 
-4. **Заполни шаблон** (ниже). Правила: `name` kebab-case = имя папки; description
-   ≤ 500 символов; тело ≤ 150 строк; шагов 3–9 с проверяемым результатом каждый;
-   никаких «всегда/обязательно» — вместо тона критерий или источник; язык пользователя.
+5. **Create files.** Write `<skills-dir>/<name>/SKILL.md` and create
+   `.runewright/feedback/<name>.md` with `# Feedback: <name>` if missing.
 
-5. **Создай файлы:** `<skills-dir>/<name>/SKILL.md` и лог
-   `.runewright/feedback/<name>.md` с заголовком `# Feedback: <name>`.
+6. **Validate and repair until every item passes:**
+   - [ ] Description states use cases and exclusions and is <= 500 characters.
+   - [ ] Truth-sources section cites IDs or paths and says to ask, never invent.
+   - [ ] Workflow has 3-9 numbered, verifiable steps and explicit branches.
+   - [ ] Glossary has at most seven terms or is omitted.
+   - [ ] Done checklist and concrete good and bad examples exist.
+   - [ ] Gold-standard section links an example or explicitly says none exists yet.
+   - [ ] First workflow step reads feedback and last step appends to it.
+   - [ ] Body is <= 150 lines and contains no copied documentation.
+   - [ ] YAML frontmatter is valid and contains only `name` and `description`.
 
-6. **Самопроверка** (все пункты — да, иначе исправь и повтори):
-   - [ ] description: «когда применять» И «когда НЕ применять», ≤ 500 символов
-   - [ ] секция «Источники истины» с ID/путями и правилом «не нашёл — спроси»
-   - [ ] 3–9 нумерованных шагов, ветвления явные
-   - [ ] словарь ≤ 7 терминов (или секции нет, если терминов нет)
-   - [ ] чеклист «сдано» + пример хорошего и плохого результата
-   - [ ] строка про эталон (ссылка или «эталона пока нет»)
-   - [ ] шаг 1 читает feedback-лог, последний шаг пишет в него
-   - [ ] тело ≤ 150 строк; внутри нет скопированной документации
-   - [ ] фронтматтер — валидный YAML; только поля `name` и `description`
+7. **Finish.** Show the generated `SKILL.md` and one sentence explaining how to
+   invoke it and what its first run does. Append this generator's feedback record
+   using the blueprint contract.
 
-7. **Заверши:** покажи пользователю SKILL.md + одну строку «как вызвать и что
-   произойдёт при первом запуске». Допиши запись в свой feedback-лог (формат —
-   контракт живого скилла в blueprint).
+## SKILL.md template
 
-## Шаблон SKILL.md
+Localize human-facing headings and prose to the target artifact language while
+preserving the semantic structure below.
 
 ```markdown
 ---
-name: <kebab-case-имя>
+name: <kebab-case-name>
 description: >-
-  <Что делает, 1 предложение.> Использовать когда: <триггеры через запятую>.
-  НЕ использовать когда: <анти-триггеры> — тогда <куда идти вместо>.
+  <What it does.> Use when: <verbatim triggers>. Do not use when: <anti-triggers>;
+  use <alternative> instead.
 ---
 
-# <Название>
+# <Title>
 
-## Источники истины
-- `<ID из .runewright/sources/INDEX.md или путь>` — <что оттуда брать, на каком шаге>
-- Правило: факта нет в источниках — спроси пользователя; не выдумывай.
+## Truth sources
+- `<source ID or path>` - <what to retrieve and at which step>
+- Rule: if a fact is absent from sources, ask the user; never invent it.
 
-## Термины
-- **<термин>** — <определение в одну строку>
+## Terms
+- **<term>** - <one-line definition>
 
-## Сценарий
-1. Прочитай последние 5 записей `.runewright/feedback/<имя>.md` — учти уроки.
-2. <действие> → <проверяемый результат>
-N. Допиши запись исхода в `.runewright/feedback/<имя>.md`.
+## Workflow
+1. Read the last five records in `.runewright/feedback/<name>.md` and apply lessons.
+2. <action> -> <verifiable result>
+N. Append the outcome to `.runewright/feedback/<name>.md`.
 
-## Критерии результата
-Сдано, когда:
-- [ ] <проверяемое условие>
-- [ ] каждый вывод в результате имеет ссылку на источник.
+## Result criteria
+Done when:
+- [ ] <verifiable condition>
+- [ ] Every factual claim cites a source.
 
-Хорошо: <конкретный пример в 1–2 строки>.
-Плохо: <конкретный пример типичной ошибки в 1–2 строки>.
+Good: <specific one- or two-line example>.
+Bad: <specific likely failure in one or two lines>.
 
-## Эталон
-<`examples/<файл>` — принят без правок <дата> | «Эталона пока нет; первый
-результат, принятый без правок, сохранить в examples/ и сослаться здесь.»>
+## Gold standard
+<`examples/<file>` accepted unchanged on <date> | no gold standard yet; save and
+link the first result accepted unchanged>
 ```
 
-## Критерии результата (самого генератора)
-Сдано: скилл создан, все 9 пунктов самопроверки пройдены, лог создан.
-Хорошо: скилл, который слабая модель выполняет без уточняющих вопросов.
-Плохо: скилл со скопированным содержимым источников или description без анти-триггеров.
+## Generator result criteria
+
+Done when the skill and feedback log exist and all nine validation checks pass.
+
+Good: a smaller model can execute the skill without clarification.
+
+Bad: copied source content or a description without anti-triggers.

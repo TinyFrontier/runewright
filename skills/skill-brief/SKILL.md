@@ -1,103 +1,116 @@
 ---
 name: skill-brief
 description: >-
-  Интервью перед созданием скилла: за 1–3 раунда вопросов вытягивает из пользователя
-  задачу, триггеры, источники истины, критерии и эталон, и пишет бриф для
-  skill-generator. Использовать когда: «нужен скилл для X», «создай скилл», а
-  требования ещё в голове у пользователя. НЕ использовать когда: бриф уже есть или
-  все данные собраны — тогда сразу skill-generator; когда собираются требования к
-  продукту или документации, а не к скиллу.
+  Interviews the user before creating a skill or subagent role, collecting the
+  task, triggers, truth sources, criteria, boundaries, and gold example in one to
+  three rounds, then writes a generator-ready brief. Use when requirements are
+  still in the user's head. Do not use when a complete brief already exists or
+  when gathering product or documentation requirements instead.
 ---
 
 # skill-brief
 
-Цель: вытянуть максимум знаний о задаче ДО генерации, чтобы скилл получился
-правильным с первого раза. Выход — бриф `.runewright/briefs/<name>.md`, который
-skill-generator использует как готовый вход. Не выдумывай ответы за пользователя.
+Extract task knowledge before generation so the result is correct on its first
+run. Write `.runewright/briefs/<name>.md` for skill-generator or
+subagent-generator. Never invent an answer for the user. Read
+`../runewright-blueprint/SKILL.md` and follow its language contract.
 
-Сначала прочитай последние 5 записей `.runewright/feedback/skill-brief.md`
-(нет файла — пропусти) и учти уроки.
+First read the last five records in `.runewright/feedback/skill-brief.md`; skip
+when the file does not exist.
 
-## Правила интервью
+## Interview rules
 
-- Раунд = одно сообщение с 3–5 вопросами. Максимум 3 раунда; дальше — фиксируй
-  дыры как «не определено» и завершай.
-- Не задавай вопрос, ответ на который уже прозвучал или выводится из файлов проекта —
-  сначала посмотри сам (существующие скиллы, `.runewright/sources/INDEX.md`).
-- Самый ценный материал — **прогон вручную** (раунд 1, вопрос 3): рассказ, как
-  пользователь делал задачу в последний раз, шаг за шагом. Из него выводится 80%
-  сценария, источников и критериев — остальные вопросы закрывают дыры.
-- Ответ «не знаю / по-разному» — тоже ответ: пиши в бриф как есть, не дожимай.
+- One round is one message with 3-5 questions. Stop after three rounds; record
+  remaining gaps as undefined.
+- Do not ask for facts already stated or derivable from project files. Inspect
+  existing skills and `.runewright/sources/INDEX.md` first.
+- The most valuable input is the manual walkthrough in round 1: how the user last
+  performed the task, step by step. Derive the workflow, sources, and criteria
+  from it, then ask only to close gaps.
+- `I don't know` and `it varies` are valid answers. Record them without pressure.
+- Ask questions in the language of the user's current request. Write the brief in
+  an explicitly requested artifact language, or otherwise in that same language.
 
-## Раунды
+## Rounds
 
-**Раунд 1 — задача и прогон:**
-1. Что за задача одним предложением и каким должен быть результат (файл? отчёт? код?)?
-2. Как часто она повторяется и кто будет запускать скилл (ты сам / слабая модель / оба)?
-3. Расскажи, как ты делал её в последний раз, по шагам: с чего начал, куда смотрел,
-   что решал, чем закончил. Можно вразнобой — я соберу.
-4. Покажи лучший готовый образец результата, если есть (путь/ссылка).
+**Round 1 - task and walkthrough:**
 
-**Раунд 2 — закрой дыры по услышанному** (спрашивай только то, чего не хватает):
-- Триггеры: какими словами ты попросишь эту задачу? 2–4 формулировки дословно.
-- Анти-триггеры: какие похожие просьбы означают ДРУГУЮ задачу? Куда их направлять?
-- Источники: где лежит правда для шагов из рассказа (файлы, БД, доки, URL)?
-  Что агент должен брать оттуда, а не «помнить»?
-- Ветвления: что меняется, когда <вариант из рассказа>? Какие случаи редкие,
-  но обязательные?
+1. What is the task in one sentence, and what form should the result take?
+2. How often does it recur, and who runs it: you, a smaller model, or both?
+3. Walk me through the last time you did it: where you started, what you checked,
+   what you decided, and how you finished. An unordered account is fine.
+4. Share the best finished example if one exists: a path or link.
 
-**Раунд 3 — критерии и границы** (только незакрытое):
-- По каким признакам ты понимаешь «готово, принимаю»? Проверяемо, не «качественно».
-- Какую ошибку исполнитель сделает вероятнее всего? Была ли такая уже?
-- Чего скиллу делать НЕЛЬЗЯ (файлы, действия, зоны других ролей)?
-- Нужна ли изоляция контекста / параллельность (→ признак, что нужен и сабагент)?
+**Round 2 - close only observed gaps:**
 
-## Шаблон брифа `.runewright/briefs/<name>.md`
+- Triggers: what exact 2-4 phrases would you use to request this task?
+- Anti-triggers: what similar requests mean a different task, and where should
+  they be routed?
+- Sources: where does the truth live for each step: files, databases, docs, URLs?
+- Branches: what changes for variants from the walkthrough, including rare but
+  required cases?
+
+**Round 3 - criteria and boundaries, only when missing:**
+
+- What verifiable signs mean the result is accepted?
+- What mistake is the executor most likely to make? Has it happened before?
+- What files, actions, or other roles are out of bounds?
+- Does the task need isolated context or parallel work, suggesting a subagent?
+- For a subagent, also confirm platform, scope, permissions, self-contained input,
+  parallelism, and report format.
+
+## Brief template
+
+Localize prose and human-facing headings to the target artifact language while
+preserving these semantic sections so generators can find them by meaning:
 
 ```markdown
-# Бриф скилла: <name>
-Дата: <дата>. Статус: готов к генерации | есть дыры (см. «Не определено»)
+# Skill or subagent brief: <name>
+Date: <date>. Status: ready for generation | gaps remain
 
-## Задача и результат
-<1–2 предложения + формат результата>
-Повторяемость: <как часто, кто запускает>
+## Task and result
+<one or two sentences plus result format>
+Recurrence: <frequency and executor>
 
-## Триггеры (дословно от пользователя)
-- «<формулировка>»
-## Анти-триггеры
-- «<формулировка>» → <куда вместо>
+## Triggers - verbatim from the user
+- "<phrase>"
+## Anti-triggers
+- "<phrase>" -> <alternative>
 
-## Прогон вручную (пересказ пользователя, упорядоченный)
-1. <шаг> — источник: <где правда>
-Ветвления: <если X → ...>
+## Manual walkthrough
+1. <step> - source: <where the truth lives>
+Branches: <if X, then ...>
 
-## Источники истины
-- <путь/URL/БД> — <что оттуда берётся> (зарегистрировать в sources/INDEX.md при генерации)
+## Truth sources
+- <path, URL, or database> - <what to retrieve>
 
-## Критерии
-Сдано: <проверяемые условия>
-Типичная ошибка: <из ответов>
-## Эталон
-<путь | «нет — первый принятый результат»>
-## Границы
-<что нельзя>
-## Исполнитель
-<скилл | скилл + сабагент (почему)>
-## Не определено
-<дыры с пометкой «уточнить при первом запуске» | «—»>
+## Criteria
+Done: <verifiable conditions>
+Likely failure: <from the user's answers>
+## Gold standard
+<path | none; use the first accepted result>
+## Boundaries
+<prohibited actions>
+## Executor
+<skill | skill plus subagent and why>
+## Undefined
+<gaps to clarify on first run | none>
 ```
 
-## Завершение
+## Completion
 
-1. Запиши бриф (создай `.runewright/briefs/`, если нет), покажи пользователю
-   5-строчную выжимку и список «Не определено».
-2. Предложи сразу запустить skill-generator с этим брифом (он пропустит сбор данных,
-   переспросит только «Не определено»).
-3. Допиши запись в `.runewright/feedback/skill-brief.md` (формат — контракт живого
-   скилла в `../runewright-blueprint/SKILL.md`; файла нет — создай).
+1. Create `.runewright/briefs/` if needed, write the brief, and show a five-line
+   summary plus the undefined items.
+2. Offer to continue immediately with the appropriate generator; it should reuse
+   the brief and ask only about undefined items.
+3. Append a record to `.runewright/feedback/skill-brief.md` using the live-skill
+   contract; create the file when missing.
 
-## Критерии результата
-Сдано: бриф записан; все секции шаблона присутствуют; в «Прогоне вручную» ≥ 3 шага
-с источниками; дыры честно перечислены в «Не определено».
-Хорошо: бриф, по которому skill-generator не задал ни одного вопроса, кроме «Не определено».
-Плохо: бриф, где триггеры придуманы моделью, а не записаны дословно от пользователя.
+## Result criteria
+
+Done when every semantic section exists, the manual walkthrough has at least
+three sourced steps, and gaps are explicitly listed.
+
+Good: the generator needs no question except those listed as undefined.
+
+Bad: the model invents triggers instead of recording the user's exact phrases.

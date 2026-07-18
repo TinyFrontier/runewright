@@ -1,43 +1,57 @@
 # Runewright
 
-Фабрика скиллов и субагентов для LLM-агентов. Один GitHub marketplace — два
-рантайма: **Claude Code** и **Codex**. Цель: агенты на
-дешёвых моделях работают по маршрутам, спроектированным один раз, — без
-галлюцинаций и без раздувания контекста.
+A skill and subagent factory for LLM agents. One GitHub marketplace supports two
+runtimes: **Claude Code** and **Codex**. Runewright turns a workflow into a small,
+source-grounded route that strong and smaller models can execute consistently.
 
-## Скиллы
+## Included skills
 
-| Скилл | Что делает |
+| Skill | Purpose |
 |---|---|
-| `skill-brief` | Интервью (1–3 раунда) перед созданием скилла: вытягивает задачу, триггеры, источники, критерии → бриф |
-| `skill-generator` | Бриф/запрос → готовый SKILL.md по эталонной схеме из 7 элементов, с самопроверкой |
-| `subagent-generator` | Роль → субагент Claude Code (`.md`) и/или Codex (`.toml`): границы, минимальные права, параллельность, формат отчёта |
-| `skill-audit` | Повторяемый аудит всех скиллов окружения: дубликаты, раздутость, мёртвые скиллы → план правок |
-| `runewright-blueprint` | Справочный канон (7 элементов, анти-паттерны, контракт «живого» скилла) — читается остальными |
+| `skill-brief` | Runs a one-to-three-round interview and records the task, triggers, sources, criteria, boundaries, and gold example. |
+| `skill-generator` | Turns a request into a production-ready `SKILL.md`; automatically runs `skill-brief` when no ready brief exists. |
+| `subagent-generator` | Creates a Claude Code Markdown role and/or Codex TOML role; automatically runs `skill-brief` when needed. |
+| `skill-audit` | Audits environment skills for duplication, bloat, inactivity, and blueprint compliance, then writes a remediation plan. |
+| `runewright-blueprint` | Defines the seven required elements, anti-patterns, language policy, and live-skill feedback contract used by the other skills. |
 
-Рабочий цикл: `skill-brief` → `skill-generator` → работа скиллом → `skill-audit`
-раз в месяц. Каждый созданный скилл — «живой»: пишет лог запусков и учится на нём.
+Typical loop: `skill-brief` -> `skill-generator` -> use the skill -> run
+`skill-audit` periodically. Every generated skill keeps an append-only execution
+log and can incorporate recurring feedback during later consolidation.
 
-## Установка из GitHub marketplace
+## Language behavior
+
+The repository, manifests, templates, and skill instructions are English. At
+runtime, Runewright:
+
+- speaks in the language of the user's current request;
+- writes a generated brief, skill, or agent in an explicitly requested language;
+- otherwise writes the artifact in the language of the user's current request;
+- keeps code, identifiers, paths, source IDs, YAML/TOML keys, and status tokens
+  such as `DONE`, `PARTIAL`, and `BLOCKED` stable.
+
+## Install from the GitHub marketplace
 
 ### Claude Code
 
-В терминале:
+From a terminal:
 
 ```bash
 claude plugin marketplace add TinyFrontier/runewright
 claude plugin install runewright@runewright
 ```
 
-Или те же команды внутри интерактивной сессии:
+Or from an interactive Claude Code session:
 
 ```text
 /plugin marketplace add TinyFrontier/runewright
 /plugin install runewright@runewright
 ```
 
-Скиллы доступны как `/runewright:skill-brief`, `/runewright:skill-generator`
-и т.д.; Claude также может выбрать их автоматически по description.
+Invoke skills explicitly as `/runewright:skill-brief`,
+`/runewright:skill-generator`, `/runewright:subagent-generator`, and so on. Claude
+can also select them from their descriptions. Calling either generator without a
+ready brief starts the brief interview automatically unless the user explicitly
+asks to skip it.
 
 ### Codex
 
@@ -46,15 +60,15 @@ codex plugin marketplace add TinyFrontier/runewright
 codex plugin add runewright@runewright
 ```
 
-После установки начните новую задачу, чтобы Codex загрузил компоненты плагина.
-Явный вызов: `$runewright:skill-brief`, `$runewright:skill-generator` и т.д.;
-автоматический — по description.
+Start a new task after installation so Codex loads the plugin components. Invoke
+skills explicitly as `$runewright:skill-brief`, `$runewright:skill-generator`, and
+so on, or let Codex select one from its description.
 
-Обе команды marketplace принимают приватный репозиторий, если локальный Git уже
-авторизован для него. Для публичной установки достаточно сделать этот репозиторий
-public и запушить файлы из текущей ветки.
+Both marketplace commands can use a private repository when local Git is already
+authorized. For public installation, make this repository public and publish the
+files from the release branch.
 
-### Локальная разработка Codex без marketplace
+### Local Codex development without a marketplace
 
 ```bash
 git clone https://github.com/TinyFrontier/runewright.git
@@ -63,57 +77,59 @@ cd runewright
 ./install-codex.sh --project /path/to/repo
 ```
 
-Скрипт создаёт симлинки в `~/.agents/skills` или `<repo>/.agents/skills`, поэтому
-`git pull` обновляет локальные skills без переустановки плагина. При конфликте с
-обычной папкой скрипт останавливается с ошибкой и ничего не перезаписывает.
+The script creates symlinks in `~/.agents/skills` or
+`<repo>/.agents/skills`, so `git pull` updates locally installed skills without a
+plugin reinstall. If a destination is an ordinary file or directory, the script
+reports a conflict and does not overwrite it.
 
-## Состояние проекта
+## Project state
 
-Всё, что фабрика создаёт и накапливает, живёт в **`.runewright/`** в корне вашего
-проекта (нейтрально к платформе):
+Generated and accumulated state lives in the platform-neutral `.runewright/`
+directory at the project root:
 
-```
+```text
 .runewright/
-  sources/    # источники истины: INDEX.md + decisions/ + external/
-  feedback/   # логи запусков скиллов (петля обратной связи)
-  briefs/     # брифы из skill-brief
-  audits/     # отчёты skill-audit
+  sources/    # truth sources: INDEX.md, decisions/, external/
+  feedback/   # skill and agent execution logs
+  briefs/     # briefs written by skill-brief
+  audits/     # skill-audit reports
 ```
 
-Каркас `sources/` создаёт `skill-generator` при первом запуске (из
-`skills/skill-generator/assets/sources-scaffold/`).
+`skill-generator` copies the initial `sources/` scaffold from
+`skills/skill-generator/assets/sources-scaffold/` on first use.
 
-## Архитектурные решения
+## Design decisions
 
-- **Скилл — маршрут, не учебник.** Знания живут в `.runewright/sources/` (три вида
-  правды: выводимая — хранится команда получения; решённая — DEC-файлы с основанием;
-  внешняя — указатель с датой проверки). Скилл ссылается на ID из плоского INDEX.md.
-- **Один формат skills для двух платформ.** Стандарт Agent Skills: `name` +
-  `description` во фронтматтере, всё остальное — тело. Ссылки между скиллами —
-  относительные (`../runewright-blueprint/SKILL.md`): работают и в кэше плагина
-  Claude Code, и через симлинки в `~/.agents/skills`.
-- **Два формата ролей.** `subagent-generator` создаёт Markdown с YAML-frontmatter
-  для Claude Code и TOML с `developer_instructions` для Codex; контракт роли и
-  формат отчёта остаются одинаковыми.
-- **Жёсткие лимиты.** Скилл ≤ 150 строк, агент ≤ 100, description ≤ 500 символов.
-  Codex и Claude используют descriptions для выбора skill; короткие формулировки
-  экономят контекст и лучше переживают сокращение списка при большом числе skills.
-- **Ничего не удаляется автоматически.** `skill-audit` только предлагает план;
-  применение — после подтверждения человека.
+- **A skill is a route, not a textbook.** Knowledge lives under
+  `.runewright/sources/`: derived truth is represented by a retrieval command,
+  decided truth by a decision file with rationale, and external truth by a pointer
+  with its last verification date. Skills cite stable IDs from a flat `INDEX.md`.
+- **One skill format serves both platforms.** Agent Skills frontmatter contains
+  `name` and `description`; the workflow lives in the body. Relative skill links,
+  such as `../runewright-blueprint/SKILL.md`, work in Claude's plugin cache and
+  through Codex skill symlinks.
+- **Agent roles use two native formats.** `subagent-generator` writes YAML-frontmatter
+  Markdown for Claude Code and TOML with `developer_instructions` for Codex while
+  keeping one role contract and report format.
+- **Hard size limits.** Skill body <= 150 lines, agent body <= 100 lines, and
+  description <= 500 characters. Short descriptions reduce persistent context
+  load and remain useful when a client truncates long skill lists.
+- **No automatic deletion.** `skill-audit` proposes a plan. Destructive changes
+  require separate user confirmation.
 
-## Проверка перед релизом
+## Release validation
 
 ```bash
 claude plugin validate . --strict
 bash -n install-codex.sh
 ```
 
-Версию релиза нужно менять одновременно в `.claude-plugin/plugin.json` и
-`.codex-plugin/plugin.json`. Текущая версия — `0.2.0`.
+Update the release version together in `.claude-plugin/plugin.json` and
+`.codex-plugin/plugin.json`. Current version: `0.3.0`.
 
-## Ограничения
+## Limitations
 
-- `install-codex.sh` требует POSIX-шелл и нужен только для прямой установки
-  skills; пользователям Windows рекомендуется установка через marketplace.
-- Форматы конфигурации субагентов различаются между платформами, поэтому один
-  и тот же агент представлен двумя файлами, если пользователь запросил обе версии.
+- `install-codex.sh` requires a POSIX shell and is only needed for direct skill
+  installation. Windows users should prefer marketplace installation.
+- Claude Code and Codex use different subagent configuration formats, so a
+  cross-platform role is represented by two files.

@@ -1,38 +1,41 @@
-# Источники истины (.runewright/sources/)
+# Truth sources (`.runewright/sources/`)
 
-Единое место, откуда скиллы и агенты берут факты. Скилл никогда не содержит знание —
-он содержит указатель сюда. Агент читает источник в момент выполнения и цитирует
-прочитанное; нет источника — спрашивает пользователя. Это контракт против галлюцинаций.
+This is the single place from which skills and agents retrieve facts. A skill
+contains a pointer here, never the knowledge itself. At runtime, the agent reads
+and cites the source. When no source exists, it asks the user instead of inventing
+an answer.
 
-## Три вида правды — хранятся по-разному
+## Three kinds of truth
 
-- **Выводимая** (структура репо, актуальный API, список роутов) — НЕ хранится вообще.
-  Хранится *команда получения*: `curl <url>/openapi.json`, `ls src/routes`. Любая
-  сохранённая копия выводимой правды начинает врать в момент записи.
-- **Решённая** (выбор стека, соглашения, границы продукта) — хранится здесь, в
-  `decisions/`: одно решение = один файл с основанием. Единственный вид правды,
-  которому здесь место в полном тексте — её больше негде вывести.
-- **Внешняя** (доки вендоров, ТЗ, дашборды) — хранится *указатель* в `external/`:
-  URL + что там искать + дата последней проверки. Не копия.
+- **Derived truth**, such as repository structure, current APIs, or route lists,
+  is not stored. Store a retrieval command such as `curl <url>/openapi.json` or
+  `ls src/routes`; a saved copy becomes stale immediately.
+- **Decided truth**, such as stack choices, conventions, or product boundaries,
+  belongs in `decisions/`: one decision and its rationale per file. It is the only
+  truth type stored here in full because it cannot be derived elsewhere.
+- **External truth**, such as vendor docs, specifications, or dashboards, is a
+  pointer in `external/`: URL, what to find, how to read it, and verification date.
 
-## Правила
+## Rules
 
-- Скиллы ссылаются на стабильный ID из плоского `INDEX.md` (DEC-*, EXT-*, CMD-*),
-  а не на путь: файл можно переместить, поправив одну строку индекса.
-- Новый факт в скилле → сначала карточка здесь + строка в INDEX.md, потом ссылка по ID.
-- Противоречие источника с реальностью → обновить источник (DEC — новым решением,
-  старое пометить superseded), а не «запомнить в скилле».
-- skill-audit проверяет: битые ID, карточки EXT старше 90 дней, DEC без основания.
+- Skills cite stable IDs from the flat `INDEX.md` (`DEC-*`, `EXT-*`, `CMD-*`), not
+  paths. A file can move after one registry row is updated.
+- Before adding a factual claim to a skill, add a source card and registry row,
+  then cite its ID.
+- When a source conflicts with reality, update the source. Supersede a decision
+  with a new one; do not teach the discrepancy to a skill.
+- skill-audit checks broken IDs, external pointers older than 90 days, and
+  decisions without rationale.
 
-## Структура
+## Structure
 
-```
+```text
 .runewright/
   sources/
-    INDEX.md     — реестр (читается целиком)
-    decisions/   — DEC-*.md (шаблон _TEMPLATE.md)
-    external/    — EXT-*.md (шаблон _TEMPLATE.md)
-  feedback/      — логи запусков скиллов (контракт — скилл runewright-blueprint)
-  briefs/        — брифы из skill-brief
-  audits/        — отчёты skill-audit
+    INDEX.md     # flat registry, read in full
+    decisions/   # DEC-*.md; use _TEMPLATE.md
+    external/    # EXT-*.md; use _TEMPLATE.md
+  feedback/      # skill execution logs; see runewright-blueprint
+  briefs/        # briefs from skill-brief
+  audits/        # reports from skill-audit
 ```

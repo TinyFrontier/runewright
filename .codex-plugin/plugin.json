@@ -1,7 +1,7 @@
 {
   "name": "runewright",
-  "version": "0.2.0",
-  "description": "Фабрика скиллов и субагентов: интервью-бриф, генерация, аудит и петля обратной связи для Claude Code и Codex.",
+  "version": "0.3.0",
+  "description": "A skill and subagent factory with automatic briefing, generation, auditing, and feedback loops for Claude Code and Codex.",
   "author": {
     "name": "TinyFrontier",
     "url": "https://github.com/TinyFrontier"
@@ -20,8 +20,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Runewright",
-    "shortDescription": "Фабрика скиллов и субагентов",
-    "longDescription": "Проектируйте, создавайте и проверяйте переиспользуемые Agent Skills и роли субагентов по единому воспроизводимому процессу.",
+    "shortDescription": "Skill and subagent factory",
+    "longDescription": "Design, generate, and audit reusable Agent Skills and subagent roles through one source-grounded, repeatable workflow.",
     "developerName": "TinyFrontier",
     "category": "Productivity",
     "capabilities": [
@@ -30,9 +30,9 @@
     ],
     "websiteURL": "https://github.com/TinyFrontier/runewright",
     "defaultPrompt": [
-      "Подготовь бриф для нового скилла.",
-      "Создай новый скилл по канону Runewright.",
-      "Проведи аудит установленных скиллов и агентов."
+      "Prepare a brief for a new skill.",
+      "Create a new skill using the Runewright blueprint.",
+      "Audit the installed skills and agents."
     ],
     "brandColor": "#7C3AED"
   }

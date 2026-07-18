@@ -1,10 +1,12 @@
-# DEC-XXX: <решение в одной строке>
+# DEC-XXX: <one-line decision>
 
-- Статус: принято <дата> | superseded by DEC-YYY
-- Основание: <почему так решили: факты, ссылка на обсуждение/эксперимент>
+- Status: accepted <date> | superseded by DEC-YYY
+- Rationale: <facts and links to the discussion or experiment>
 
-## Решение
-<Само решение, императивно, ≤ 10 строк. Что делаем и чего не делаем.>
+## Decision
+
+<The decision in imperative form, at most 10 lines. State what to do and not do.>
 
 ## Superseded
-<Какое решение это отменяет и почему | «—»>
+
+<Decision replaced and reason | none>

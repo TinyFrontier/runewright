@@ -1,5 +1,5 @@
-# Логи обратной связи скиллов
+# Skill feedback logs
 
-Один файл на скилл: `<skill-name>.md` (агенты — `agent-<name>.md`).
-Формат записи, чтение (последние 5), консолидация — контракт живого скилла
-в скилле `runewright-blueprint`.
+Use one file per skill: `<skill-name>.md`; agents use `agent-<name>.md`.
+The `runewright-blueprint` skill defines record format, reading the last five
+records, and consolidation.

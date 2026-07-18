@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Устанавливает skills Runewright напрямую для локальной разработки без marketplace.
-# По умолчанию — глобально в ~/.agents/skills; --project <dir> — в <dir>/.agents/skills.
+# Installs Runewright skills directly for local development without a marketplace.
+# Default: user-wide in ~/.agents/skills; --project <dir>: <dir>/.agents/skills.
 set -euo pipefail
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/skills"
@@ -33,7 +33,7 @@ for skill in "$SRC_DIR"/*/; do
     ln -sfn "${skill%/}" "$dest"
     installed=$((installed+1))
   elif [[ -e "$dest" ]]; then
-    echo "CONFLICT $name: $dest существует и не является симлинком" >&2
+    echo "CONFLICT $name: $dest exists and is not a symlink" >&2
     skipped=$((skipped+1))
   else
     ln -s "${skill%/}" "$dest"
@@ -41,11 +41,11 @@ for skill in "$SRC_DIR"/*/; do
   fi
 done
 
-echo "Готово: $installed симлинков в $TARGET (пропущено: $skipped)."
+echo "Done: $installed symlinks installed in $TARGET ($skipped skipped)."
 if (( skipped > 0 )); then
-  echo "Установка неполная: устраните конфликты и запустите скрипт повторно." >&2
+  echo "Installation is incomplete: resolve conflicts and run the script again." >&2
   exit 1
 fi
 
-echo "Проверка: запустите Codex и выполните /skills — скиллы skill-brief, skill-generator,"
-echo "subagent-generator, skill-audit, runewright-blueprint должны быть в списке."
+echo "Verify: start Codex and run /skills. The list should include skill-brief,"
+echo "skill-generator, subagent-generator, skill-audit, and runewright-blueprint."

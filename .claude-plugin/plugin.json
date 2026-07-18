@@ -1,8 +1,8 @@
 {
   "name": "runewright",
   "displayName": "Runewright",
-  "version": "0.2.0",
-  "description": "Фабрика скиллов и сабагентов: интервью-бриф, генераторы по эталонной схеме (7 элементов), аудит и «живые» скиллы с петлёй обратной связи. Кросс-платформенно: Claude Code и Codex (Agent Skills).",
+  "version": "0.3.0",
+  "description": "A cross-platform skill and subagent factory for Claude Code and Codex: automatic briefing, generation from a seven-element blueprint, auditing, and live feedback loops.",
   "author": { "name": "TinyFrontier" },
   "repository": "https://github.com/TinyFrontier/runewright",
   "license": "MIT",

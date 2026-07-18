@@ -1,138 +1,148 @@
 ---
 name: subagent-generator
 description: >-
-  Создаёт роль субагента для активной платформы: Markdown-конфигурацию Claude Code
-  или TOML-конфигурацию Codex, с границами, минимальными правами, параллельностью
-  и форматом отчёта. Использовать когда: «создай агента/субагента», «нужна роль для
-  параллельной или изолированной работы». НЕ использовать когда: задача не требует
-  отдельного контекста или прав — тогда skill-generator.
+  Creates a subagent role for the active platform: Claude Code Markdown or Codex
+  TOML, with boundaries, minimal permissions, parallelism, and a fixed report
+  contract. If no ready brief exists, it runs skill-brief automatically. Use for
+  "create an agent" or work needing isolated or parallel context. Do not use when
+  separate context or permissions are unnecessary; use skill-generator instead.
 ---
 
 # subagent-generator
 
-Выход — конфигурация роли для выбранной платформы. Канон и контракт живого
-скилла — `../runewright-blueprint/SKILL.md` (прочитай перед работой). Иди строго
-по шагам.
+Create role configuration for the requested platform. Read
+`../runewright-blueprint/SKILL.md` first and follow its language contract. Execute
+the steps in order.
 
-## Термины
+## Terms
 
-- **Платформа** — Claude Code или Codex; не выводи её только из наличия папок.
-- **Область** — project (файл в репозитории) или user (файл в домашней папке).
-- **Роль** — один тип субагента с узкой ответственностью и отдельным контекстом.
+- **Platform** - Claude Code or Codex; do not infer it only from existing folders.
+- **Scope** - project, stored in the repository, or user, stored in the home folder.
+- **Role** - one narrow responsibility with its own context.
 
-## Скилл или субагент?
+## Skill or subagent?
 
-Субагент нужен, только если верно хотя бы одно:
-- работа изолируется от контекста оркестратора (поиск, логи, большие файлы);
-- нужны отдельные права или модель;
-- задача делится на независимые параллельные части.
+Use a subagent only when at least one condition holds:
 
-Иначе остановись и предложи `skill-generator`.
+- work should be isolated from orchestrator context, such as search or large logs;
+- the role needs distinct permissions or a model;
+- independent parts can run in parallel.
 
-## Шаги
+Otherwise stop and recommend skill-generator.
 
-1. **Прочитай уроки:** последние 5 записей
-   `.runewright/feedback/subagent-generator.md` (нет файла — пропусти).
+## Steps
 
-2. **Определи платформу и область.** Явный выбор пользователя главнее окружения.
-   Если он просит кросс-платформенную роль — создай оба файла. Иначе используй
-   платформу текущего клиента; если она не определима — задай один вопрос.
-   Проверь дубликаты:
-   - Claude Code: `.claude/agents/*.md` или `~/.claude/agents/*.md`;
-   - Codex: `.codex/agents/*.toml` или `~/.codex/agents/*.toml`.
-   Роль уже есть — предложи доработать её и остановись.
+1. **Read lessons.** Read the last five records in
+   `.runewright/feedback/subagent-generator.md`; skip when missing.
 
-3. **Собери входные данные.** Есть бриф `.runewright/briefs/<name>.md` с
-   исполнителем «скилл + субагент» — возьми данные оттуда. Иначе спроси одним
-   сообщением: роль и запреты; условия вызова; самодостаточный вход; источники;
-   формат результата; нужна ли запись файлов, shell, отдельная модель или MCP.
+2. **Resolve the brief automatically.** Reuse a matching ready brief in
+   `.runewright/briefs/<name>.md`. If none exists and the user did not explicitly
+   request no brief, execute `../skill-brief/SKILL.md` in the current conversation
+   with the original request. Do not ask permission to interview. For this role,
+   ensure the brief covers self-contained input, boundaries, permissions,
+   platform, parallelism, report format, and `skill plus subagent` as executor.
+   Continue here after writing the brief, without another invocation. If the user
+   explicitly skips the brief, collect all missing fields in one message.
 
-4. **Спроектируй ограничения.** Для read-only роли:
-   - Claude Code — `tools: Read, Glob, Grep`, добавь `Bash` только при необходимости;
-   - Codex — `sandbox_mode = "read-only"`.
-   Для пишущей роли Claude Code добавь только нужные `Write`, `Edit`, `Bash`;
-   в Codex не расширяй sandbox относительно родителя без явной причины.
-   Модель и reasoning наследуй, если пользователь не попросил иное.
+3. **Choose platform and scope.** Explicit user choice beats environment clues.
+   For a cross-platform role, create both formats. Otherwise use the active client;
+   ask one question only if it cannot be determined. Check for duplicates:
+   - Claude Code: `.claude/agents/*.md` or `~/.claude/agents/*.md`;
+   - Codex: `.codex/agents/*.toml` or `~/.codex/agents/*.toml`.
+   If the role exists, offer to improve it and stop.
 
-5. **Создай файл или два:**
-   - Claude project/user: `.claude/agents/<name>.md` или
-     `~/.claude/agents/<name>.md` по шаблону A;
-   - Codex project/user: `.codex/agents/<name>.toml` или
-     `~/.codex/agents/<name>.toml` по шаблону B.
-   Создай `.runewright/feedback/agent-<name>.md`, если его нет.
+4. **Design least privilege.** For a read-only Claude role, use `Read, Glob, Grep`
+   and add `Bash` only when needed; for Codex use `sandbox_mode = "read-only"`.
+   For a writing Claude role, add only required `Write`, `Edit`, and `Bash`. For a
+   writing Codex role, inherit the parent's sandbox unless a wider policy has an
+   explicit reason. Inherit model and reasoning unless the user requests otherwise.
 
-6. **Самопроверка:** имя kebab-case; description объясняет когда звать и не звать;
-   вход самодостаточен; запреты явные; права минимальны; формат отчёта фиксирован;
-   параллельность определена. Для Markdown проверь YAML, для TOML — синтаксис TOML
-   и обязательные `name`, `description`, `developer_instructions`.
+5. **Create one or two files:**
+   - Claude project/user: `.claude/agents/<name>.md` or
+     `~/.claude/agents/<name>.md`, using template A;
+   - Codex project/user: `.codex/agents/<name>.toml` or
+     `~/.codex/agents/<name>.toml`, using template B.
+   Create `.runewright/feedback/agent-<name>.md` when missing. Write human-facing
+   role prose in the explicitly requested language, or otherwise the language of
+   the user's current request. Keep keys, paths, and report control tokens stable.
 
-7. **Заверши:** покажи путь и пример делегирования. Для двух платформ объясни,
-   что файлы описывают одну роль, но не должны ссылаться друг на друга. Допиши
-   запись в feedback-лог по контракту blueprint.
+6. **Validate and repair.** Require kebab-case name; trigger and anti-trigger in
+   description; self-contained input; explicit prohibitions; least privilege;
+   fixed report format; and defined parallelism. Validate Markdown YAML. Validate
+   TOML and require `name`, `description`, and `developer_instructions`.
 
-## Шаблон A — Claude Code
+7. **Finish.** Show each path and a delegation example. If both formats exist,
+   explain that they describe one role but must not reference each other. Append
+   this generator's feedback record using the blueprint contract.
+
+## Template A - Claude Code
+
+Localize human-facing headings and prose, but preserve frontmatter keys and the
+report labels and status values below.
 
 ```markdown
 ---
-name: <kebab-case-имя>
-description: <роль>. Вызывать когда: <условия>. Не вызывать когда: <случаи>.
-tools: <минимальный список через запятую>
+name: <kebab-case-name>
+description: <role>. Use when: <conditions>. Do not use when: <cases>.
+tools: <minimal comma-separated list>
 ---
 
-Ты — <роль>.
+You are <role>.
 
-## Вход
-Оркестратор передаёт: <пути, задача, критерии>. Не хватает данных — верни BLOCKED.
+## Input
+The orchestrator provides <paths, task, criteria>. If data is missing, return BLOCKED.
 
-## Источники истины
-- `<ID/путь>` — <что брать>. Факта нет — не выдумывай.
+## Truth sources
+- `<ID or path>` - <what to retrieve>. If a fact is absent, never invent it.
 
-## Сценарий
-1. <действие> → <проверяемый результат>
-N. Верни отчёт заданного формата.
+## Workflow
+1. <action> -> <verifiable result>
+N. Return the required report.
 
-## Запрещено
-- <действие или область вне ответственности>
+## Prohibited
+- <action or area outside responsibility>
 
-## Параллельность
-<Можно N копий и правило разделения | один экземпляр и причина>.
+## Parallelism
+<Up to N copies plus partition rule | one instance plus reason>.
 
-## Формат отчёта
-СТАТУС: DONE | PARTIAL | BLOCKED
-РЕЗУЛЬТАТ: <пути или вывод>
-ПРОВЕРЕНО: <критерии и доказательства>
-ПРОБЛЕМЫ: <проблемы | «нет»>
+## Report format
+STATUS: DONE | PARTIAL | BLOCKED
+RESULT: <paths or findings>
+VERIFIED: <criteria and evidence>
+ISSUES: <issues | none>
 ```
 
-## Шаблон B — Codex
+## Template B - Codex
 
 ```toml
-name = "<kebab-case-имя>"
-description = "<роль>. Вызывать когда: <условия>. Не вызывать когда: <случаи>."
+name = "<kebab-case-name>"
+description = "<role>. Use when: <conditions>. Do not use when: <cases>."
 sandbox_mode = "read-only"
 developer_instructions = """
-Ты — <роль>.
+You are <role>.
 
-Вход: оркестратор передаёт <пути, задачу, критерии>. Не хватает данных — BLOCKED.
-Источники: <ID/пути>. Факта нет — не выдумывай.
-Сценарий: <3–9 проверяемых шагов>.
-Запрещено: <границы>.
-Параллельность: <N копий и разделение | один экземпляр и причина>.
+Input: the orchestrator provides <paths, task, criteria>. Missing data means BLOCKED.
+Truth sources: <IDs or paths>. Never invent an absent fact.
+Workflow: <3-9 verifiable steps>.
+Prohibited: <boundaries>.
+Parallelism: <N copies and partition rule | one instance plus reason>.
 
-Финальный отчёт:
-СТАТУС: DONE | PARTIAL | BLOCKED
-РЕЗУЛЬТАТ: <пути или вывод>
-ПРОВЕРЕНО: <критерии и доказательства>
-ПРОБЛЕМЫ: <проблемы | «нет»>
+Final report:
+STATUS: DONE | PARTIAL | BLOCKED
+RESULT: <paths or findings>
+VERIFIED: <criteria and evidence>
+ISSUES: <issues | none>
 """
 ```
 
-Для пишущего Codex-агента удали `sandbox_mode`, чтобы он наследовал политику
-родителя; не задавай более широкие права автоматически.
+For a writing Codex role, remove `sandbox_mode` so it inherits parent policy; do
+not grant broader permissions automatically.
 
-## Критерии результата
+## Result criteria
 
-Сдано: создан валидный файл для каждой запрошенной платформы, ограничения
-минимальны, роль можно делегировать без истории диалога.
-Хорошо: Claude- и Codex-варианты одной роли возвращают одинаковый контракт отчёта.
-Плохо: агент с полными правами и входом «делай как обсуждали».
+Done when every requested platform has a valid file, permissions are minimal,
+and the role can be delegated without conversation history.
+
+Good: Claude and Codex variants of one role return the same report contract.
+
+Bad: full permissions with the input `do what we discussed`.
