@@ -1,7 +1,7 @@
 {
   "name": "runewright",
   "displayName": "Runewright",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Фабрика скиллов и сабагентов: интервью-бриф, генераторы по эталонной схеме (7 элементов), аудит и «живые» скиллы с петлёй обратной связи. Кросс-платформенно: Claude Code и Codex (Agent Skills).",
   "author": { "name": "TinyFrontier" },
   "repository": "https://github.com/TinyFrontier/runewright",
